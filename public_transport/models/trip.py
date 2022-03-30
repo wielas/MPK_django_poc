@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Trip(models.Model):
+    # TODO route_id = models.ForeignKey(Route)
     route_id = models.CharField(max_length=10)
     service_id = models.PositiveIntegerField()
     trip_id = models.CharField(primary_key=True, max_length=20)
