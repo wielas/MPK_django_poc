@@ -30,10 +30,10 @@ class Command(BaseCommand):
                 stop_id = Stop.objects.get(id=row[3])
 
                 # correct format in datetime row
-                if row[1].startswith("24") or row[1].startswith("25"):
+                if row[1].startswith("24") or row[1].startswith("25") or row[1].startswith("26"):
                     row[1] = row[1].replace(row[1][0:2], "00", 1)
 
-                if row[2].startswith("24") or row[2].startswith("25"):
+                if row[2].startswith("24") or row[2].startswith("25") or row[1].startswith("26"):
                     row[2] = row[2].replace(row[2][0:2], "00", 1)
 
                 _, created = StopTimes.objects.get_or_create(

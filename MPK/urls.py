@@ -15,8 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+
+from public_transport import viewsets as views
+
+router = routers.DefaultRouter()
+router.register(r'public_transport/cities', views.CityViewSet)
+router.register(r'public_transport/city/wroclaw/routes', views.RouteViewSet)
+router.register(r'public_transport/city/wroclaw/stops', views.StopViewSet)
+router.register(r'public_transport/city/wroclaw/trips', views.TripViewSet)
+router.register(r'public_transport/city/wroclaw/stoptimes', views.StopTimesViewSet)
+
 
 urlpatterns = [
-    path('public_transport/', include('public_transport.urls')),
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
+    path('api-auth/', include('rest_framework.urls'))
 ]
