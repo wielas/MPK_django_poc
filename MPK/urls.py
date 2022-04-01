@@ -30,7 +30,6 @@ router.register(r'public_transport/city/wroclaw/stoptimes', views.StopTimesViewS
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('dist/', views.DistanceView.as_view()),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
 ]

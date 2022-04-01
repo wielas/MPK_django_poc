@@ -8,7 +8,8 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = 'Imports stop_times.csv data into database'
 
-    def handle(self, *args, **kwargs):
+    @staticmethod
+    def handle(*args, **kwargs):
 
         with open(os.path.join(os.getcwd(), "csv_files/stop_times.csv"), encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -29,7 +30,7 @@ class Command(BaseCommand):
                 trip_id = Trip.objects.get(trip_id=row[0])
                 stop_id = Stop.objects.get(id=row[3])
 
-                # correct format in datetime row
+                # correct format in datetime row (tak, naprawdę są tam krzaczki typu godzina 25:00 lub 26:00)
                 if row[1].startswith("24") or row[1].startswith("25") or row[1].startswith("26"):
                     row[1] = row[1].replace(row[1][0:2], "00", 1)
 

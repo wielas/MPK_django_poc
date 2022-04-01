@@ -7,8 +7,10 @@ from public_transport.models import Stop, StopTimes
 
 class Command(BaseCommand):
     help = 'Imports stops.csv data into database'
-
-    def handle(self, *args, **kwargs):
+    
+    @staticmethod
+    def handle(*args, **kwargs):
+        
         all_stops = Stop.objects.all()
         print(all_stops)
 

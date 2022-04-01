@@ -7,10 +7,10 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = 'Imports trips.csv data into database'
+    
+    @staticmethod
+    def handle(*args, **kwargs):
 
-    def handle(self, *args, **kwargs):
-
-        # import trips.csv into Trip model
         all_trips = Trip.objects.all()
         print(all_trips)
 
