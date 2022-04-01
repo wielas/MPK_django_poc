@@ -25,7 +25,7 @@ router.register(r'public_transport/city/wroclaw/routes', views.RouteViewSet)
 router.register(r'public_transport/city/wroclaw/stops', views.StopViewSet)
 router.register(r'public_transport/city/wroclaw/trips', views.TripViewSet)
 router.register(r'public_transport/city/wroclaw/stoptimes', views.StopTimesViewSet)
-# router.register(r'public_transport/city/wroclaw/distance', views.DistanceViewSet)
+router.register(r'public_transport/city/wroclaw/distance', views.DistanceViewSet)
 
 
 urlpatterns = [
