@@ -25,10 +25,12 @@ router.register(r'public_transport/city/wroclaw/routes', views.RouteViewSet)
 router.register(r'public_transport/city/wroclaw/stops', views.StopViewSet)
 router.register(r'public_transport/city/wroclaw/trips', views.TripViewSet)
 router.register(r'public_transport/city/wroclaw/stoptimes', views.StopTimesViewSet)
+router.register(r'public_transport/city/wroclaw/distance', views.DistanceViewSet)
 
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('dist/', views.DistanceView.as_view()),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
 ]
