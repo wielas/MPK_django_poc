@@ -11,12 +11,13 @@ class Command(BaseCommand):
     @staticmethod
     def handle(*args, **kwargs):
 
+        all_stoptimes = StopTimes.objects.all()
+        print(all_stoptimes)
+        
         with open(os.path.join(os.getcwd(), "csv_files/stop_times.csv"), encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader, None)
             next(reader, None)
-            all_stoptimes = StopTimes.objects.all()
-            print(all_stoptimes)
 
             for row in reader:
                 # Make a relation to Stop and Trip objects
@@ -24,7 +25,7 @@ class Command(BaseCommand):
                 if not Stop.objects.filter(id=row[3]).exists():
                     raise Exception(f"There is no stop with id {row[3]}")
 
-                if not Trip.objects.filter(trip_id='3_10494220').exists():
+                if not Trip.objects.filter(trip_id=row[0]).exists():
                     raise Exception(f"There is no trip with id {row[0]}")
 
                 trip_id = Trip.objects.get(trip_id=row[0])
@@ -39,12 +40,8 @@ class Command(BaseCommand):
 
                 _, created = StopTimes.objects.get_or_create(
                     trip_id=trip_id,
-                    arrival_time=row[1],
                     departure_time=row[2],
-                    stop_id=stop_id,
-                    stop_sequence=row[4],
-                    pickup_type=row[5],
-                    drop_off_time=row[6],
+                    stop_id=stop_id
                 )
 
         all_stoptimes = StopTimes.objects.all()

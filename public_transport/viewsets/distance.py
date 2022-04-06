@@ -1,14 +1,14 @@
-import psycopg2
-import datetime
+import json
+from datetime import datetime
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.exceptions import NotAcceptable
-from rest_framework.response import Response
 from schema import And, Optional, Schema, SchemaError
 
 from public_transport.models import Stop
 from public_transport.serializers import StopSerializer
+from public_transport.utils import get_distance_between_coords, stops_by_distance_query
 
 
 def check_schema(conf):
@@ -24,41 +24,17 @@ def check_schema(conf):
     input_schema = Schema({Optional('age'): And(lambda n : 0 <= n <= 120, int),
                          'longitude': And(lambda n : -180 <= n <= 180, float),
                          'latitude': And(lambda n : -180 <= n <= 180, float),
-                         Optional('direction'): int,
-                         Optional('time'): str
+                         Optional('time'): str,
+                         Optional('dest_long'): And(lambda n : -180 <= n <= 180, float),
+                         Optional('dest_lat'): And(lambda n : -180 <= n <= 180, float),
                          })
     try:
         input_schema.validate(conf)
-    except:
+    except SchemaError:
         raise NotAcceptable("Wrong request format")
 
 
-def db_distance_query(data, relevant_distance):
-    """
-    Function returning up to 5 closest stops based on given coordinates and radius
 
-    Args:
-        data (dict): data received in request
-        relevant_distance (int): acceptable distance from nearest stop measured in kilometers
-    """
-    
-    conn = psycopg2.connect(user="postgres",
-                            password="postgres",
-                            host="db",
-                            port="5432",
-                            database="postgres")
-    cur = conn.cursor()
-
-    psql_query = f"""
-    SELECT * 
-    FROM public_transport_stop 
-    WHERE (point(longitude,latitude) <@> point({data["longitude"]},{data["latitude"]})) < {relevant_distance}
-    ORDER BY (point(longitude,latitude) <@> point({data["longitude"]},{data["latitude"]}))
-    ASC LIMIT 5"""
-    
-    cur.execute(psql_query)
-    return cur.fetchall()
-    
 
 class DistanceViewSet(viewsets.ModelViewSet):
     """
@@ -67,12 +43,11 @@ class DistanceViewSet(viewsets.ModelViewSet):
     queryset = Stop.objects.all()
     serializer_class = StopSerializer
 
-    def get_queryset(self):
-        return self.queryset.filter(name="testname")
+    # def get_queryset(self):
+    #     return self.queryset.filter(name="testname")
 
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
         
         check_schema(request.data)
         
@@ -94,12 +69,28 @@ class DistanceViewSet(viewsets.ModelViewSet):
         else:
             relevant_distance = 10
         
-        
-        closest_stops = db_distance_query(request.data, relevant_distance)
+        closest_stops = stops_by_distance_query(request.data["longitude"], request.data["latitude"], relevant_distance)
         stops_obj_list = [get_object_or_404(Stop, id=row[0]) for row in closest_stops]
 
-        #time handling
-        dt = datetime.datetime.strptime("21:00:00", "%H:%M:%S").time()
-        print(stops_obj_list[0].stoptimes_set.filter(departure_time__lt=dt))
+        # time handling
+        if "time" not in request.data:
+            return HttpResponse(json.dumps(stops_obj_list))
+        
+        dt_time = datetime.strptime(request.data["time"], "%H:%M:%S").time()
+        # TODO filter all
+        stops_gte_time = stops_obj_list[1].stoptimes_set.filter(departure_time__gte=dt_time)
+
+        # direction handling
+        if "dest_long" not in request.data or "dest_lat" not in request.data:
+            print(stops_gte_time)
+            
+            return HttpResponse(stops_gte_time)
+        
+        for stop in stops_obj_list:
+            print(stop)
+        
+
                         
-        return HttpResponse(stops_obj_list[0].stoptimes_set.filter(departure_time=dt))
+
+                        
+        return HttpResponse(stops_gte_time)

@@ -1,7 +1,7 @@
 import csv
 import os
 
-from public_transport.models import Stop, Trip
+from public_transport.models import Trip, Route
 from django.core.management.base import BaseCommand
 
 
@@ -10,24 +10,26 @@ class Command(BaseCommand):
     
     @staticmethod
     def handle(*args, **kwargs):
-
+        
         all_trips = Trip.objects.all()
         print(all_trips)
 
-        with open(os.path.join(os.getcwd(), "csv_files/trips.csv")) as f:
+        with open(os.path.join(os.getcwd(), "csv_files/trips.csv"), encoding='utf-8') as f:
             reader = csv.reader(f)
+            next(reader, None)
+            next(reader, None)
             for row in reader:
+                if not Route.objects.filter(id=row[0]).exists():
+                    raise Exception(f"There is no route with id {row[0]}")
+
+                route_id = Route.objects.get(id=row[0])
 
                 _, created = Trip.objects.get_or_create(
-                    route_id=row[0],
+                    route_id=route_id,
                     service_id=row[1],
                     trip_id=row[2],
                     headsign=row[3],
-                    direction_id=row[4],
-                    shape_id=row[5],
-                    brigade_id=row[6],
-                    vehicle_id=row[7],
-                    variant_id=row[8],
+                    direction_id=row[4]
                 )
 
         all_trips = Trip.objects.all()

@@ -5,6 +5,6 @@ class Command(BaseCommand):
     help = 'Imports all data into database'
 
     def handle(self, *args, **kwargs):
+        import_trips.Command.handle()
         import_stops.Command.handle()
         import_stop_times.Command.handle()
-        import_trips.Command.handle()
