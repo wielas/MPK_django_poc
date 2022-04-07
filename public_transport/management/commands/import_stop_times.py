@@ -21,21 +21,20 @@ class Command(BaseCommand):
 
             for row in reader:
                 # Make a relation to Stop and Trip objects
-
                 if not Stop.objects.filter(id=row[3]).exists():
                     raise Exception(f"There is no stop with id {row[3]}")
 
                 if not Trip.objects.filter(trip_id=row[0]).exists():
                     raise Exception(f"There is no trip with id {row[0]}")
 
-                trip_id = Trip.objects.get(trip_id=row[0])
                 stop_id = Stop.objects.get(id=row[3])
+                trip_id = Trip.objects.get(trip_id=row[0])
 
                 # correct format in datetime row (tak, naprawdę są tam krzaczki typu godzina 25:00 lub 26:00)
                 if row[1].startswith("24") or row[1].startswith("25") or row[1].startswith("26"):
                     row[1] = row[1].replace(row[1][0:2], "00", 1)
 
-                if row[2].startswith("24") or row[2].startswith("25") or row[1].startswith("26"):
+                if row[2].startswith("24") or row[2].startswith("25") or row[2].startswith("26"):
                     row[2] = row[2].replace(row[2][0:2], "00", 1)
 
                 _, created = StopTimes.objects.get_or_create(

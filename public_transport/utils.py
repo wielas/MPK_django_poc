@@ -20,7 +20,7 @@ def stops_by_distance_query(long, lat, relevant_distance):
     psql_query = f"""
     SELECT * 
     FROM public_transport_stop 
-    WHERE (point(longitude,latitude) <@> point({long},{lat})) < {relevant_distance}
+    WHERE (point(longitude,latitude) <@> point({long},{lat})) < {relevant_distance*0.62137}
     ORDER BY (point(longitude,latitude) <@> point({long},{lat}))
     ASC LIMIT 5"""
     

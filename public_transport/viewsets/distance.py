@@ -4,10 +4,11 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.exceptions import NotAcceptable
+from rest_framework.response import Response
 from schema import And, Optional, Schema, SchemaError
 
 from public_transport.models import Stop
-from public_transport.serializers import StopSerializer
+from public_transport.serializers import StopSerializer, StopTimesSerializer
 from public_transport.utils import get_distance_between_coords, stops_by_distance_query
 
 
@@ -46,13 +47,26 @@ class DistanceViewSet(viewsets.ModelViewSet):
     # def get_queryset(self):
     #     return self.queryset.filter(name="testname")
 
-
+    def list(self, request, *args, **kwargs):
+        print(request.GET.get('q', ''))
+        
+        age = request.GET.get('age', '20')
+        longitude = request.GET.get('long', 17.019393880)
+        latitude = request.GET.get('lat', 51.1071331900)
+        time = request.GET.get('time', '')
+        
+        self.create(request, age=age, longitude=longitude, latitude=latitude, time=time)
+        return HttpResponse("get resp")
+        
     def create(self, request, *args, **kwargs):
         
-        check_schema(request.data)
+        if not kwargs:
+            check_schema(request.data)
         
+        age_to_match = request.data["age"] if "age" not in kwargs or not kwargs["age"] else kwargs["age"]
+        print(age_to_match)
         if "age" in request.data:
-            match request.data["age"]:
+            match age_to_match:
                 case num if num in range(0, 16) or num in range(36, 50):
                     relevant_distance = 1
                 case num if num in range(17, 26):
@@ -68,29 +82,43 @@ class DistanceViewSet(viewsets.ModelViewSet):
         
         else:
             relevant_distance = 10
+
+        long = request.data["longitude"] if "longitude" not in kwargs or not kwargs["longitude"] else kwargs["longitude"]
+        lat = request.data["latitude"] if "latitude" not in kwargs or not kwargs["latitude"] else kwargs["latitude"]
         
         closest_stops = stops_by_distance_query(request.data["longitude"], request.data["latitude"], relevant_distance)
         stops_obj_list = [get_object_or_404(Stop, id=row[0]) for row in closest_stops]
 
+
         # time handling
         if "time" not in request.data:
-            return HttpResponse(json.dumps(stops_obj_list))
-        
-        dt_time = datetime.strptime(request.data["time"], "%H:%M:%S").time()
-        # TODO filter all
-        stops_gte_time = stops_obj_list[1].stoptimes_set.filter(departure_time__gte=dt_time)
+            return HttpResponse(stops_obj_list)
 
+        dt_time = datetime.strptime(request.data["time"], "%H:%M:%S").time()
+        
+        stop_times_gte = [stop_obj.stoptimes_set.filter(departure_time__gte=dt_time) for stop_obj in stops_obj_list]
+        
+        stop_times_dict_list = []
+        print(stop_times_gte[0][0])
+        print(type(stop_times_gte))
+        print(type(stop_times_gte[0]))
+        
+        for stop in range(len(stop_times_gte)):
+            dep_times = [str(item[0]) + " " + str(item[1]) for item in list(stop_times_gte[stop].values_list('departure_time', 'trip_id__headsign'))]
+            
+            stop_times_dict_list.append({
+                "stop_name": stops_obj_list[stop].name,
+                # "vehicle headsign": stops_obj_list[stop].id,
+                "first entry route": stop_times_gte[stop].first().trip_id.route_id.description,
+                "departure time /w direction": dep_times,
+            })
+        
+        
         # direction handling
         if "dest_long" not in request.data or "dest_lat" not in request.data:
-            print(stops_gte_time)
+            return HttpResponse(json.dumps(stop_times_dict_list))
+        
+        
+        
             
-            return HttpResponse(stops_gte_time)
-        
-        for stop in stops_obj_list:
-            print(stop)
-        
-
-                        
-
-                        
-        return HttpResponse(stops_gte_time)
+        return HttpResponse("route, times and headsigns")
